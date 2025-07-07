@@ -12,10 +12,8 @@
 <body>
   <div id="map"></div>
 
-  <!-- Leaflet -->
+  <!-- Librairies -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- GeoTIFF support -->
   <script src="https://unpkg.com/geotiff/dist/geotiff.browser.min.js"></script>
   <script src="https://unpkg.com/georaster/dist/georaster.browser.min.js"></script>
   <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"></script>
@@ -23,26 +21,32 @@
   <script>
     const map = L.map('map').setView([36.7833, 3.0589], 15);
 
-    // OSM background
+    // OpenStreetMap en fond
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Load GeoTIFF from Google Drive
-    fetch("https://drive.google.com/uc?export=download&id=1HO4LBbpMiOLuRNz-ziLxmHgO6q6GhXIS")
+    // Fichier TIFF via proxy compatible
+    const gdriveFileId = "1HO4LBbpMiOLuRNz-ziLxmHgO6q6GhXIS";
+    const proxyUrl = `https://gdriv.es/download/${gdriveFileId}`;
+
+    fetch(proxyUrl)
       .then(response => response.arrayBuffer())
-      .then(arrayBuffer => {
-        parseGeoraster(arrayBuffer).then(georaster => {
-          const layer = new GeoRasterLayer({
-            georaster: georaster,
-            opacity: 0.8
-          });
-          layer.addTo(map);
-          map.fitBounds(layer.getBounds());
+      .then(parseGeoraster)
+      .then(georaster => {
+        const layer = new GeoRasterLayer({
+          georaster: georaster,
+          opacity: 0.85
         });
+        layer.addTo(map);
+        map.fitBounds(layer.getBounds());
+      })
+      .catch(error => {
+        console.error("Erreur de chargement GeoTIFF :", error);
+        alert("Erreur de chargement de l’image géoréférencée.");
       });
 
-    // Add marker on Port d'Alger
+    // Marqueur Port d'Alger
     const portIcon = L.icon({
       iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
       iconSize: [32, 32]
